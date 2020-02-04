@@ -31,6 +31,9 @@ class HTTPResponse(object):
     def __init__(self, code=200, body=""):
         self.code = code
         self.body = body
+        # self.response()
+        return None
+
 
 class HTTPClient(object):
     #def get_host_port(self,url):
@@ -41,13 +44,18 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
-        return None
+        try:
+            code = int(data.split('\r\n')[0].split(' ')[1])
+            return code
+        except Exception as e:
+            print(data)
+            print(e)
 
     def get_headers(self,data):
-        return None
+        return data.split('\r\n\r\n')[0]
 
     def get_body(self, data):
-        return None
+        return data.split('\r\n\r\n')[1]
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -65,16 +73,88 @@ class HTTPClient(object):
                 buffer.extend(part)
             else:
                 done = not part
+        # print(buffer)
         return buffer.decode('utf-8')
 
+    def parser(self,url):
+        def display(parsed):
+            print('scheme  :', parsed.scheme)
+            print('netloc  :', parsed.netloc)
+            print('path    :', parsed.path)
+            print('query   :', parsed.query)
+            print('fragment:', parsed.fragment)
+            print('username:', parsed.username)
+            print('password:', parsed.password)
+            print('hostname:', parsed.hostname)
+            print('port    :', parsed.port)
+
+        parsed = urllib.parse.urlparse(url)
+        # display(parsed)
+        path = '/' if parsed.path == '' else parsed.path
+        host = parsed.hostname
+        port = 80 if parsed.port == None else parsed.port
+        return path,host,port
+
+    def urlencoded(self,args):
+        #content = ''
+        #for key,value in args.items():
+            #content += (key+'='+value+'&')
+        #return content[:-1]
+        return urllib.parse.urlencode(args)
+
+
+
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+        path,host,port = self.parser(url)
+        self.connect(host,port)
+
+        payload  = ['GET '+path+' HTTP/1.1\r\n',
+                    'Host: '+host+'\r\n',
+                    'Accept-Charset: UTF-8\r\n',
+                    'Connection: Keep-Alive\r\n\r\n']
+        payload = ''.join(payload)
+
+        # print(payload)
+
+        self.sendall(payload)
+        self.socket.shutdown(socket.SHUT_WR)
+
+        data = self.recvall(self.socket)
+        code = self.get_code(data)
+        body = self.get_body(data)
+        header = self.get_headers(data)
+        # print(body)
+        self.close()
         return HTTPResponse(code, body)
 
+
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        print("********************",type(args))
+        path,host,port = self.parser(url)
+        self.connect(host,port)
+        content = '' if args == None else self.urlencoded(args)
+
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
+        payload  = ['POST '+path+' HTTP/1.1\r\n',
+                    'Host: '+host+'\r\n',
+                    'Content-Type: application/x-www-form-urlencoded\r\n',
+                    'Content-Length: '+str(len(content))+'\r\n'
+                    'Accept-Charset: UTF-8\r\n',
+                    'Connection: Keep-Alive\r\n\r\n',
+                    content]
+        
+
+        payload = ''.join(payload)
+        # print(payload)
+        self.sendall(payload)
+        self.socket.shutdown(socket.SHUT_WR)
+
+        data = self.recvall(self.socket)
+        code = self.get_code(data)
+        body = self.get_body(data)
+        header = self.get_headers(data)
+        # print(body)
+        self.close()
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
