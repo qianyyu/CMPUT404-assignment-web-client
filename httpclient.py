@@ -147,7 +147,7 @@ class HTTPClient(object):
         payload  = ['POST '+path+' HTTP/1.1\r\n',
                     'Host: '+host+'\r\n',
                     'Content-Type: application/x-www-form-urlencoded\r\n',
-                    'Content-Length: '+str(len(content))+'\r\n'
+                    'Content-Length: '+str(len(str.encode(content)))+'\r\n'
                     'Accept-Charset: UTF-8\r\n',
                     'Connection: close\r\n\r\n',
                     content]
