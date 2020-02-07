@@ -13,5 +13,9 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8     
 USER me
 WORKDIR /home/me
+RUN git clone https://github.com/qianyyu/CMPUT404-assignment-web-client.git qian6
+WORKDIR /home/me/qian6
+
+RUN ./freetests.py
 # This is how we get your tests to run (arbitrary shell scripts)
 # ADD arb.sh /home/me/arb.sh

@@ -89,7 +89,7 @@ class HTTPClient(object):
             print('port    :', parsed.port)
 
         parsed = urllib.parse.urlparse(url)
-        # display(parsed)
+        display(parsed)
         path = '/' if parsed.path == '' else parsed.path
         host = parsed.hostname
         port = 80 if parsed.port == None else parsed.port
@@ -111,7 +111,7 @@ class HTTPClient(object):
         payload  = ['GET '+path+' HTTP/1.1\r\n',
                     'Host: '+host+'\r\n',
                     'Accept-Charset: UTF-8\r\n',
-                    'Connection: Keep-Alive\r\n\r\n']
+                    'Connection: close\r\n\r\n']
         payload = ''.join(payload)
 
         # print(payload)
@@ -129,7 +129,7 @@ class HTTPClient(object):
 
 
     def POST(self, url, args=None):
-        print("********************",type(args))
+        # print("********************",type(args))
         path,host,port = self.parser(url)
         self.connect(host,port)
         content = '' if args == None else self.urlencoded(args)
@@ -140,7 +140,7 @@ class HTTPClient(object):
                     'Content-Type: application/x-www-form-urlencoded\r\n',
                     'Content-Length: '+str(len(content))+'\r\n'
                     'Accept-Charset: UTF-8\r\n',
-                    'Connection: Keep-Alive\r\n\r\n',
+                    'Connection: close\r\n\r\n',
                     content]
         
 
