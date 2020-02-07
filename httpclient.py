@@ -18,6 +18,10 @@
 # Write your own HTTP GET and POST
 # The point is to understand what you have to send and get experience with it
 
+# Reference:
+# PyMOTW-3,https://pymotw.com/3/urllib.parse/
+# MDN, https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
+
 import sys
 import socket
 import re
@@ -33,6 +37,8 @@ class HTTPResponse(object):
         self.body = body
         # self.response()
         return None
+    # def __str__(self):
+        # print(self.body)
 
 
 class HTTPClient(object):
@@ -87,13 +93,17 @@ class HTTPClient(object):
             print('password:', parsed.password)
             print('hostname:', parsed.hostname)
             print('port    :', parsed.port)
-
-        parsed = urllib.parse.urlparse(url)
-        display(parsed)
-        path = '/' if parsed.path == '' else parsed.path
-        host = parsed.hostname
-        port = 80 if parsed.port == None else parsed.port
-        return path,host,port
+        try:
+            parsed = urllib.parse.urlparse(url)
+            if(parsed.hostname == None):
+                raise Exception('Invalid URL')
+            # display(parsed)
+            path = '/' if parsed.path == ''   else parsed.path
+            host = parsed.hostname
+            port = 80  if parsed.port == None else parsed.port
+            return path,host,port
+        except Exception as e:
+            print(e)
 
     def urlencoded(self,args):
         #content = ''
@@ -122,14 +132,13 @@ class HTTPClient(object):
         data = self.recvall(self.socket)
         code = self.get_code(data)
         body = self.get_body(data)
+        print(body)
         header = self.get_headers(data)
-        # print(body)
         self.close()
         return HTTPResponse(code, body)
 
 
     def POST(self, url, args=None):
-        # print("********************",type(args))
         path,host,port = self.parser(url)
         self.connect(host,port)
         content = '' if args == None else self.urlencoded(args)
@@ -145,7 +154,6 @@ class HTTPClient(object):
         
 
         payload = ''.join(payload)
-        # print(payload)
         self.sendall(payload)
         self.socket.shutdown(socket.SHUT_WR)
 
@@ -153,8 +161,9 @@ class HTTPClient(object):
         code = self.get_code(data)
         body = self.get_body(data)
         header = self.get_headers(data)
-        # print(body)
+        print(body)
         self.close()
+
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
